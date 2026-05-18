@@ -24,6 +24,7 @@ import com.hefebo.invasion_v2.repository.PlanetRepository;
 import com.hefebo.invasion_v2.service.LeaderService;
 import com.hefebo.invasion_v2.service.PlanetService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,11 +36,13 @@ public class PlanetServiceImpl implements PlanetService {
     private final PlanetRepository planetRepository;
     private final PlanetMapper planetMapper;
     private final LeaderService leaderService;
+    private final PlanetColonizationTxService planetColonizationTxService;
 
     private final TaskScheduler taskScheduler;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
+    @Transactional
     public PlanetResponse initialPlanet() {
         LeaderResponse leaderResponse = leaderService.createLeader();
         Leader leader = leaderRepository.findById(leaderResponse.getId()).orElseThrow(() -> new RuntimeException("Giocatore non trovato."));
@@ -55,11 +58,13 @@ public class PlanetServiceImpl implements PlanetService {
             if(!optional.isPresent()){
                 present = false;
 
-                PlanetResponse planetResponse = _createPlanet(galaxy, solarSystem, position);
+                PlanetResponse planetResponse = planetColonizationTxService._createPlanet(galaxy, solarSystem, position);
                 Planet planet = planetRepository.findById(planetResponse.getId()).orElseThrow(() -> new RuntimeException("Pianeta non trovato."));
 
+                planet.setLeader(leader);
+
                 leader.getPlanets().add(planet);
-                leaderRepository.save(leader);
+                planetRepository.save(planet);
 
                 planet = planetRepository.findById(planet.getId()).orElseThrow(() -> new RuntimeException("Pianeta non trovato."));
 
@@ -91,7 +96,7 @@ public class PlanetServiceImpl implements PlanetService {
             }
 
             try{
-                _colonizePlanet(galaxy, solarSystem, position, leaderId);
+                planetColonizationTxService._colonizePlanet(galaxy, solarSystem, position, leaderId);
 
                 log.info("Inviando messaggio WebSocket a /topic/colonization");
                 
@@ -106,45 +111,6 @@ public class PlanetServiceImpl implements PlanetService {
 
         }, executedAt);
 
-    }
-
-    @Override
-    public PlanetResponse _colonizePlanet(double galaxy, double solarSystem, double position, long leaderId) {
-        Leader leader = leaderRepository.findById(leaderId).orElseThrow(() -> new RuntimeException("Giocatore non trovato."));
-        PlanetResponse planetResponse = _createPlanet(galaxy, solarSystem, position);
-        Planet planet = planetRepository.findById(planetResponse.getId()).orElseThrow(() -> new RuntimeException("Pianeta non trovato."));
-
-        leader.getPlanets().add(planet);
-   
-        leaderRepository.save(leader);
-
-        planet = planetRepository.findById(planet.getId()).orElseThrow(() -> new RuntimeException("Pianeta non trovato."));
-
-        return planetMapper.toDTO(planet);
-    }
-
-    @Override
-    public PlanetResponse _createPlanet(double galaxy, double solarSystem, double position){
-        Planet planet = new Planet();
-
-        planet.setGalaxy(galaxy);
-        planet.setSolarSystem(solarSystem);
-        planet.setPosition(position);
-        
-        List<Structure> structures = new ArrayList<>();
-
-        for (TypeStructure typeStructure : TypeStructure.values()) {
-            Structure structure = new Structure();
-            structure.setTypeStructure(typeStructure);
-            structure.setPlanet(planet);
-            structures.add(structure);
-        }
-        
-        planet.setStructures(structures);
-
-        planet = planetRepository.save(planet);
-
-        return planetMapper.toDTO(planet);
     }
 
 }

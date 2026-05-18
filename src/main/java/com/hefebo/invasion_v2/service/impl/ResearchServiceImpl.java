@@ -30,8 +30,6 @@ public class ResearchServiceImpl implements ResearchService{
 
     private static final Map<TypeResearch, Map<Enum<?>, Integer>> RESERCH_REQUIREMENTS  = createResearchRequirements();
 
-    
-
     @Override
     public ResearchResponse upgradeResearch(long researchId, long planetId) {
         Research research = researchRepository.findById(researchId)
