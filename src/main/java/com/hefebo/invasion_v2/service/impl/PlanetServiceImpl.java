@@ -2,8 +2,6 @@ package com.hefebo.invasion_v2.service.impl;
 
 import com.hefebo.invasion_v2.repository.LeaderRepository;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,8 +16,6 @@ import com.hefebo.invasion_v2.dto.PlanetResponse;
 import com.hefebo.invasion_v2.mapper.PlanetMapper;
 import com.hefebo.invasion_v2.model.Leader;
 import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
-import com.hefebo.invasion_v2.model.structures.Structure;
-import com.hefebo.invasion_v2.model.structures.TypeStructure;
 import com.hefebo.invasion_v2.repository.PlanetRepository;
 import com.hefebo.invasion_v2.service.LeaderService;
 import com.hefebo.invasion_v2.service.PlanetService;
