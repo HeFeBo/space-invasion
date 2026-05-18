@@ -1,12 +1,12 @@
 # Invasion V2
 
-Backend de un juego de estrategia espacial construido con Spring Boot, Spring Data JPA y MySQL.
+Backend di un gioco di strategia spaziale costruito con Spring Boot, Spring Data JPA e MySQL.
 
-## Estado del proyecto
+## Stato del progetto
 
-El proyecto sigue en desarrollo. La base principal ya está montada, pero todavía faltan varias partes del juego, lógica de negocio y endpoints por completar.
+Il progetto è ancora in sviluppo. La struttura principale è già stata realizzata, ma mancano ancora diverse parti del gioco, della logica di business e alcuni endpoint da completare.
 
-## Tecnologías
+## Tecnologie
 
 - Java 21
 - Spring Boot 4
@@ -16,63 +16,62 @@ El proyecto sigue en desarrollo. La base principal ya está montada, pero todav�
 - Maven
 - MySQL
 
-## Requisitos
+## Requisiti
 
 - Java 21
 - Maven
-- MySQL en `localhost:3306`
-- Base de datos `invasion2-db`
+- MySQL su `localhost:3306`
+- Database `invasion2-db`
 
-## Configuración local
+## Configurazione locale
 
-El proyecto tiene un perfil local en `src/main/resources/application-local.properties`.
+Il progetto utilizza un profilo locale in `src/main/resources/application-local.properties`.
 
-Ese perfil apunta a:
+Questo profilo punta a:
 
 - URL: `jdbc:mysql://localhost:3306/invasion2-db`
-- usuario: `root`
+- utente: `root`
 - driver: `com.mysql.cj.jdbc.Driver`
 
-Si quieres usar otra base o credenciales, ajusta ese archivo antes de arrancar la app.
+Se vuoi utilizzare un altro database o credenziali differenti, modifica questo file prima di avviare l’applicazione.
 
-## Ejecutar la aplicación
+## Avvio dell’applicazione
 
-Con el perfil local:
+Con il profilo locale:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-## Endpoints actuales
+## Endpoint attuali
 
-### Crear el líder inicial y su planeta
+### Creazione del leader iniziale e del suo pianeta
 
 `POST /api/invasion2`
 
-Devuelve el planeta inicial creado para un nuevo `Leader`.
+Restituisce il pianeta iniziale creato per un nuovo `Leader`.
 
-### Colonizar un planeta con líder existente
+### Colonizzazione di un pianeta con un leader esistente
 
 `POST /api/invasion2/coordinate/{galaxy}/{solarSystem}/{position}/{leaderId}`
 
-Programa la colonización diferida de un planeta en las coordenadas indicadas usando un `Leader` ya existente.
+Programma la colonizzazione differita di un pianeta nelle coordinate indicate utilizzando un `Leader` già esistente.
 
-## Notas de desarrollo
+## Note di sviluppo
 
-- La lógica de colonización todavía está en evolución.
-- Hay partes del juego que aún no están terminadas.
-- Algunas entidades y servicios siguen en refactor mientras se completa el modelo.
+- La logica di colonizzazione è ancora in evoluzione.
+- Alcune parti del gioco non sono ancora complete.
+- Alcune entità e servizi sono ancora in fase di refactoring mentre il modello viene completato.
 
-## Estructura general
+## Struttura generale
 
-- `PlanetController` expone los endpoints principales de colonización.
-- `PlanetService` orquesta la creación inicial y la colonización diferida.
-- `PlanetColonizationTxService` contiene la lógica transaccional de colonización.
-- `ResearchServiceImpl` maneja la subida de investigaciones y consumo de recursos.
+- `PlanetController` espone gli endpoint principali di colonizzazione.
+- `PlanetService` orchestra la creazione iniziale e la colonizzazione differita.
+- `PlanetColonizationTxService` contiene la logica transazionale della colonizzazione.
+- `ResearchServiceImpl` gestisce il miglioramento delle ricerche e il consumo delle risorse.
 
 ## Build
 
 ```bash
 ./mvnw test
 ```
-
