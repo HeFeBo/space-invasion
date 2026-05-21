@@ -1,0 +1,147 @@
+package com.hefebo.invasion_v2.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.hefebo.invasion_v2.model.Leader;
+import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
+import com.hefebo.invasion_v2.model.structures.Structure;
+import com.hefebo.invasion_v2.model.structures.TypeStructure;
+import com.hefebo.invasion_v2.repository.LeaderRepository;
+import com.hefebo.invasion_v2.repository.PlanetRepository;
+import com.hefebo.invasion_v2.repository.StructureRepository;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class TaskServiceTwo {
+    private final LeaderRepository leaderRepository;
+    private final PlanetRepository planetRepository;
+    private final StructureRepository structureRepository;
+
+    @Transactional
+    public Planet _colonizePlanet(double galaxy, double solarSystem, double position, long leaderId) {
+        Leader leader = leaderRepository.findById(leaderId)
+            .orElseThrow(() -> new RuntimeException("Giocatore non trovato."));
+
+        Planet planet = _createPlanet(galaxy, solarSystem, position);
+
+        leader.getPlanets().add(planet);
+        planet.setLeader(leader);
+
+        planetRepository.save(planet);
+
+        return planet;
+    }
+
+    public Planet _createPlanet(double galaxy, double solarSystem, double position) {
+        Planet planet = new Planet();
+        planet.setGalaxy(galaxy);
+        planet.setSolarSystem(solarSystem);
+        planet.setPosition(position);
+
+        List<Structure> structures = new ArrayList<>();
+        for (TypeStructure typeStructure : TypeStructure.values()) {
+            Structure structure = new Structure();
+            structure.setTypeStructure(typeStructure);
+            structure.setPlanet(planet);
+            structures.add(structure);
+        }
+
+        planet.setStructures(structures);
+        planet = planetRepository.save(planet);
+
+        return planet;
+    }
+
+    @Transactional
+    public void taskRegisteredForStructure(long structureId){
+        Structure structure = structureRepository.findById(structureId).orElseThrow(()-> new RuntimeException("Struttura non trovata"));
+        Planet planet = structure.getPlanet();
+        List<Structure> structures = planet.getStructures();
+
+        Map<TypeStructure, Structure> structureMap = structures
+            .stream()
+            .collect(Collectors.toMap(
+                Structure::getTypeStructure,
+                s -> s
+            ));
+        
+        if(
+            structure.getTypeStructure() != TypeStructure.MetalMine &&
+            structure.getTypeStructure() != TypeStructure.DiamondMine &&
+            structure.getTypeStructure() != TypeStructure.DeuteriumSynthesizer
+        )
+        
+        throw new RuntimeException("La struttura non é una struttura produttiva");
+
+        double productionPerSecond = _getValueOrZero(structure.getProductionPerHour()) / 3600;
+
+        Structure metalDeposit = structureMap.get(TypeStructure.MetalDeposit);
+        Structure diamondDeposit = structureMap.get(TypeStructure.DiamondDeposit);
+        Structure deuteriumDeposit = structureMap.get(TypeStructure.DeuteriumDeposit);
+
+        if(structure.getTypeStructure() == TypeStructure.MetalMine){
+            Structure metalMine = structure;
+            if (metalDeposit.getSupply() >= metalDeposit.getCapacity()) {
+            log.info("Il serbatoio metallico è pieno.");
+            
+            return;
+            }
+            if(!metalMine.getStatus()){
+                metalMine.setStatus(true);
+            }
+            double newSupply = Math.min(metalDeposit.getSupply() + productionPerSecond, metalDeposit.getCapacity());
+
+            if(newSupply >= metalDeposit.getCapacity()){
+                metalMine.setStatus(false);
+            } 
+            metalDeposit.setSupply(newSupply);
+            planetRepository.save(planet); 
+        }else if(structure.getTypeStructure() == TypeStructure.DiamondMine){
+            Structure diamondMine = structure;
+            if (diamondDeposit.getSupply() >= diamondDeposit.getCapacity()) {
+            log.info("Il serbatoio di diamante è pieno.");
+            return;
+            }
+            if(!diamondMine.getStatus()){
+                diamondMine.setStatus(true);
+            }
+            double newSupply = Math.min(diamondDeposit.getSupply() + productionPerSecond, diamondDeposit.getCapacity());
+
+            if(newSupply >= diamondDeposit.getCapacity()){
+                diamondMine.setStatus(false);
+            } 
+            diamondDeposit.setSupply(newSupply);
+            planetRepository.save(planet); 
+        }else{
+            Structure deuteriumSynthesizer = structure;
+            if (deuteriumDeposit.getSupply() >= deuteriumDeposit.getCapacity()) {
+            log.info("Il serbatoio di deuterio è pieno.");
+            return;
+            }
+            if(!deuteriumSynthesizer.getStatus()){
+                deuteriumSynthesizer.setStatus(true);
+            }
+            double newSupply = Math.min(deuteriumDeposit.getSupply() + productionPerSecond, deuteriumDeposit.getCapacity());
+
+            if(newSupply >= deuteriumDeposit.getCapacity()){
+                deuteriumSynthesizer.setStatus(false);
+            } 
+            deuteriumDeposit.setSupply(newSupply);
+            planetRepository.save(planet); 
+        }
+    }   
+    
+    public double _getValueOrZero(Double value) {
+        return value != null ? value : 0;
+    }
+}

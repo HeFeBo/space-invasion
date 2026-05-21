@@ -19,6 +19,7 @@ import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
 import com.hefebo.invasion_v2.repository.PlanetRepository;
 import com.hefebo.invasion_v2.service.LeaderService;
 import com.hefebo.invasion_v2.service.PlanetService;
+import com.hefebo.invasion_v2.service.TaskServiceTwo;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,8 @@ public class PlanetServiceImpl implements PlanetService {
     private final PlanetRepository planetRepository;
     private final PlanetMapper planetMapper;
     private final LeaderService leaderService;
-    private final PlanetColonizationTxService planetColonizationTxService;
+    private final TaskServiceTwo taskServiceTwo;
+    //private final PlanetColonizationTxService planetColonizationTxService;
 
     private final TaskScheduler taskScheduler;
     private final SimpMessagingTemplate messagingTemplate;
@@ -54,8 +56,7 @@ public class PlanetServiceImpl implements PlanetService {
             if(!optional.isPresent()){
                 present = false;
 
-                PlanetResponse planetResponse = planetColonizationTxService._createPlanet(galaxy, solarSystem, position);
-                Planet planet = planetRepository.findById(planetResponse.getId()).orElseThrow(() -> new RuntimeException("Pianeta non trovato."));
+                Planet planet = taskServiceTwo._createPlanet(galaxy, solarSystem, position);
 
                 planet.setLeader(leader);
 
@@ -92,7 +93,7 @@ public class PlanetServiceImpl implements PlanetService {
             }
 
             try{
-                planetColonizationTxService._colonizePlanet(galaxy, solarSystem, position, leaderId);
+                taskServiceTwo._colonizePlanet(galaxy, solarSystem, position, leaderId);
 
                 log.info("Inviando messaggio WebSocket a /topic/colonization");
                 
