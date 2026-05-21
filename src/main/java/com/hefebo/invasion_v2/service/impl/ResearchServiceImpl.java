@@ -19,6 +19,7 @@ import com.hefebo.invasion_v2.repository.PlanetRepository;
 import com.hefebo.invasion_v2.repository.ResearchRepository;
 import com.hefebo.invasion_v2.service.ResearchService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,6 +32,7 @@ public class ResearchServiceImpl implements ResearchService{
     private static final Map<TypeResearch, Map<Enum<?>, Integer>> RESERCH_REQUIREMENTS  = createResearchRequirements();
 
     @Override
+    @Transactional
     public ResearchResponse upgradeResearch(long researchId, long planetId) {
         Research research = researchRepository.findById(researchId)
                             .orElseThrow(()-> new RuntimeException("Ricerca non trovata."));
@@ -76,6 +78,7 @@ public class ResearchServiceImpl implements ResearchService{
 
     }
 
+    @Transactional
     public void validateResearchRequirements(long researchId, Map<TypeStructure, Structure> mapStructure){
         Research research = researchRepository.findById(researchId).orElseThrow(() -> new RuntimeException("Ricerca non trovata"));
         Leader leader = research.getLeader();

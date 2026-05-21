@@ -1,17 +1,14 @@
 package com.hefebo.invasion_v2.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.hefebo.invasion_v2.model.Leader;
 import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
 import com.hefebo.invasion_v2.model.structures.Structure;
 import com.hefebo.invasion_v2.model.structures.TypeStructure;
-import com.hefebo.invasion_v2.repository.LeaderRepository;
 import com.hefebo.invasion_v2.repository.PlanetRepository;
 import com.hefebo.invasion_v2.repository.StructureRepository;
 
@@ -23,44 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class TaskServiceTwo {
-    private final LeaderRepository leaderRepository;
     private final PlanetRepository planetRepository;
     private final StructureRepository structureRepository;
-
-    @Transactional
-    public Planet _colonizePlanet(double galaxy, double solarSystem, double position, long leaderId) {
-        Leader leader = leaderRepository.findById(leaderId)
-            .orElseThrow(() -> new RuntimeException("Giocatore non trovato."));
-
-        Planet planet = _createPlanet(galaxy, solarSystem, position);
-
-        leader.getPlanets().add(planet);
-        planet.setLeader(leader);
-
-        planetRepository.save(planet);
-
-        return planet;
-    }
-
-    public Planet _createPlanet(double galaxy, double solarSystem, double position) {
-        Planet planet = new Planet();
-        planet.setGalaxy(galaxy);
-        planet.setSolarSystem(solarSystem);
-        planet.setPosition(position);
-
-        List<Structure> structures = new ArrayList<>();
-        for (TypeStructure typeStructure : TypeStructure.values()) {
-            Structure structure = new Structure();
-            structure.setTypeStructure(typeStructure);
-            structure.setPlanet(planet);
-            structures.add(structure);
-        }
-
-        planet.setStructures(structures);
-        planet = planetRepository.save(planet);
-
-        return planet;
-    }
+    private final AuxiliaryService auxiliaryService;
 
     @Transactional
     public void taskRegisteredForStructure(long structureId){
@@ -83,7 +45,7 @@ public class TaskServiceTwo {
         
         throw new RuntimeException("La struttura non é una struttura produttiva");
 
-        double productionPerSecond = _getValueOrZero(structure.getProductionPerHour()) / 3600;
+        double productionPerSecond = auxiliaryService._getValueOrZero(structure.getProductionPerHour()) / 3600;
 
         Structure metalDeposit = structureMap.get(TypeStructure.MetalDeposit);
         Structure diamondDeposit = structureMap.get(TypeStructure.DiamondDeposit);
@@ -141,7 +103,4 @@ public class TaskServiceTwo {
         }
     }   
     
-    public double _getValueOrZero(Double value) {
-        return value != null ? value : 0;
-    }
 }
