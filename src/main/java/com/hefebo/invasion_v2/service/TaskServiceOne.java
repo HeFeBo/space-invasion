@@ -9,15 +9,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import com.hefebo.invasion_v2.model.Leader;
 import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
+import com.hefebo.invasion_v2.model.researchs.Research;
 import com.hefebo.invasion_v2.model.structures.Structure;
 import com.hefebo.invasion_v2.model.structures.TypeStructure;
 import com.hefebo.invasion_v2.repository.LeaderRepository;
 import com.hefebo.invasion_v2.repository.PlanetRepository;
+import com.hefebo.invasion_v2.repository.ResearchRepository;
 import com.hefebo.invasion_v2.repository.StructureRepository;
 
 import jakarta.transaction.Transactional;
@@ -31,10 +34,12 @@ public class TaskServiceOne {
     private final LeaderRepository leaderRepository;
     private final PlanetRepository planetRepository;
     private final StructureRepository structureRepository;
+    private final ResearchRepository researchRepository;
     private final TaskServiceTwo taskServiceTwo;
     private final AuxiliaryService auxiliaryService;
 
     private final TaskScheduler taskScheduler;
+    private final SimpMessagingTemplate messagingTemplate;
 
     private final Map<Long, ScheduledFuture<?>> structureTasks = new ConcurrentHashMap<>();
 
@@ -107,7 +112,10 @@ public class TaskServiceOne {
             metalRequirement > auxiliaryService._getValueOrZero(metalDeposit.getSupply()) ||
             diamondRequirement > auxiliaryService._getValueOrZero(diamondDeposit.getSupply()) ||
             deuteriumRequirement > auxiliaryService._getValueOrZero(deuteriumDeposit.getSupply())){
-            throw new RuntimeException("Resorse insufficienti per migliorare la struttura");
+                messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                    "ATENZIONE: Resorse insufficienti per migliorare " + structure.getTypeStructure()
+                );
+                throw new RuntimeException("Resorse insufficienti per migliorare la struttura");
         }
 
         metalDeposit.setSupply(auxiliaryService._getValueOrZero(metalDeposit.getSupply()) - metalRequirement);
@@ -135,6 +143,52 @@ public class TaskServiceOne {
             taskServiceTwo.taskRegisteredForStructure(structureId);
         },Duration.ofSeconds(1));
         structureTasks.put(structureId, task);
+    }
+
+    @Transactional
+    public Research _upgradeResearch(long researchId, long planetId) {
+        Research research = researchRepository.findById(researchId)
+                            .orElseThrow(()-> new RuntimeException("Ricerca non trovata."));
+        
+        Planet planet = planetRepository.findById(planetId)
+                            .orElseThrow(()-> new RuntimeException("Pianeta non trovato."));
+        
+        List<Structure> structures = planet.getStructures();
+
+        Map<TypeStructure, Structure> mapStructure = structures.stream()
+                            .collect(Collectors.toMap(Structure::getTypeStructure, s -> s));
+        
+        Structure metalDeposit = mapStructure.get(TypeStructure.MetalDeposit);
+        Structure diamondDeposit = mapStructure.get(TypeStructure.DiamondDeposit);
+        Structure deuteriumDeposit = mapStructure.get(TypeStructure.DeuteriumDeposit);
+
+        boolean firstLevel = research.getLevel() == 0;
+        if(firstLevel)auxiliaryService.validateResearchRequirements(researchId, mapStructure);
+
+        double metalRequired = research.getMetalRequiredNextLevel() != null 
+                                ? research.getMetalRequiredNextLevel() : 0;
+        double diamondRequired = research.getDiamondRequiredNextLevel() != null 
+                                ? research.getDiamondRequiredNextLevel() : 0;
+        double deuteriumRequired = research.getDeuteriumRequiredNextLevel() != null 
+                                ? research.getDeuteriumRequiredNextLevel() : 0;
+
+        if(
+            metalRequired > metalDeposit.getSupply() || 
+            diamondRequired > diamondDeposit.getSupply() ||
+            deuteriumRequired > deuteriumDeposit.getSupply()
+        ) throw new RuntimeException("Risorce insufficenti per mi migliorare la ricerca.");
+
+        metalDeposit.setSupply(metalDeposit.getSupply() - metalRequired);
+        diamondDeposit.setSupply(diamondDeposit.getSupply() - diamondRequired);
+        deuteriumDeposit.setSupply(deuteriumDeposit.getSupply() - deuteriumRequired);
+
+        research.setLevel(research.getLevel() + 1);
+
+        planetRepository.save(planet);
+        researchRepository.save(research);
+        
+        return research;
+
     }
 
 }

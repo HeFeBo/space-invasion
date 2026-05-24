@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.hefebo.invasion_v2.model.CelestialBodies.Planet;
@@ -24,6 +25,8 @@ public class TaskServiceTwo {
     private final StructureRepository structureRepository;
     private final AuxiliaryService auxiliaryService;
 
+    private final SimpMessagingTemplate messagingTemplate;
+
     @Transactional
     public void taskRegisteredForStructure(long structureId){
         Structure structure = structureRepository.findById(structureId).orElseThrow(()-> new RuntimeException("Struttura non trovata"));
@@ -36,7 +39,7 @@ public class TaskServiceTwo {
                 Structure::getTypeStructure,
                 s -> s
             ));
-        
+            
         if(
             structure.getTypeStructure() != TypeStructure.MetalMine &&
             structure.getTypeStructure() != TypeStructure.DiamondMine &&
@@ -54,9 +57,12 @@ public class TaskServiceTwo {
         if(structure.getTypeStructure() == TypeStructure.MetalMine){
             Structure metalMine = structure;
             if (metalDeposit.getSupply() >= metalDeposit.getCapacity()) {
-            log.info("Il serbatoio metallico è pieno.");
+                log.info("Il serbatoio metallico è pieno.");
+                messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                        "ATENZIONE: Il serbatoio metallico è pieno. "
+                );
             
-            return;
+                return;
             }
             if(!metalMine.getStatus()){
                 metalMine.setStatus(true);
@@ -72,6 +78,9 @@ public class TaskServiceTwo {
             Structure diamondMine = structure;
             if (diamondDeposit.getSupply() >= diamondDeposit.getCapacity()) {
             log.info("Il serbatoio di diamante è pieno.");
+            messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                    "ATENZIONE: Il serbatoio di diamante è pieno."
+            );
             return;
             }
             if(!diamondMine.getStatus()){
@@ -88,6 +97,9 @@ public class TaskServiceTwo {
             Structure deuteriumSynthesizer = structure;
             if (deuteriumDeposit.getSupply() >= deuteriumDeposit.getCapacity()) {
             log.info("Il serbatoio di deuterio è pieno.");
+            messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                    "ATENZIONE: Il serbatoio di deuterio è pieno."
+            );
             return;
             }
             if(!deuteriumSynthesizer.getStatus()){

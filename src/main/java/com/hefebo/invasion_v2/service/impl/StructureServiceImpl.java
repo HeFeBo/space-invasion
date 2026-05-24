@@ -31,16 +31,17 @@ public class StructureServiceImpl implements StructureService{
 
     @Override
     public void upgradeStructureDelay(Long structureId){
-        Instant executedAt = Objects.requireNonNull(Instant.now().plusSeconds(10));
         if(!structureRepository.findById(structureId).isPresent()){
             throw new RuntimeException("struttura non trovata");
         }
+        Instant executedAt = Objects.requireNonNull(Instant.now().plusSeconds(10));
         taskScheduler.schedule(() -> {
             Structure structure = taskServiceOne._upgradeStructure(structureId);
             int newLevel = structure.getLevel();
             log.info("Inviando messaggio WebSocket a /topic/struttura/produzione");
-            messagingTemplate.convertAndSend("/topic/struttura/produzione",
-                "SUCCESO: Miniera de metallo aggiornata al livello " + newLevel);
+            messagingTemplate.convertAndSend("/topic/struttura/produzione", //Si ha aggiunto structure.getTypeStructure()
+                "SUCCESO: " + structure.getTypeStructure() + " aggiornata al livello " + newLevel
+            ); 
         }, executedAt);
 
     }
@@ -56,7 +57,7 @@ public class StructureServiceImpl implements StructureService{
         if (task == null) throw new RuntimeException("Non esiste alcun compito per questa struttura.");
 
         task.cancel(false);
-        structureTasks.remove(structureId);
+        structureTasks.remove(structureId);//Revisar esto porque structureTask esta tambien en TaskServiceOne!!!!
         log.info("Produzione di struttura {} é in arresto.", structureId);
 
         structure.setStatus(false);
