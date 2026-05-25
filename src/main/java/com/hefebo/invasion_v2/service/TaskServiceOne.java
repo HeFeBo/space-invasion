@@ -112,6 +112,7 @@ public class TaskServiceOne {
             metalRequirement > auxiliaryService._getValueOrZero(metalDeposit.getSupply()) ||
             diamondRequirement > auxiliaryService._getValueOrZero(diamondDeposit.getSupply()) ||
             deuteriumRequirement > auxiliaryService._getValueOrZero(deuteriumDeposit.getSupply())){
+                log.warn("ATENZIONE: Resorse insufficienti per migliorare " + structure.getTypeStructure()); // ---- Si ha aggiunto questo. ----
                 messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
                     "ATENZIONE: Resorse insufficienti per migliorare " + structure.getTypeStructure()
                 );
@@ -131,9 +132,6 @@ public class TaskServiceOne {
         if(firstLevel)structure.setStatus(true);
 
         planetRepository.save(planet);
-
-        if(firstLevel && auxiliaryService._isProductionStructure(structureId))
-        _startStructureProduction(structureId);
 
         return structure;
     }
@@ -176,7 +174,7 @@ public class TaskServiceOne {
             metalRequired > metalDeposit.getSupply() || 
             diamondRequired > diamondDeposit.getSupply() ||
             deuteriumRequired > deuteriumDeposit.getSupply()
-        ) throw new RuntimeException("Risorce insufficenti per mi migliorare la ricerca.");
+        ) throw new RuntimeException("Risorce insufficenti per migliorare la ricerca.");
 
         metalDeposit.setSupply(metalDeposit.getSupply() - metalRequired);
         diamondDeposit.setSupply(diamondDeposit.getSupply() - diamondRequired);

@@ -119,15 +119,15 @@ public class Structure {
                 break;
             case 5:
                 this.metalRequiredNextLevel = 20D;
-                this.supply = 500D;
-                this.capacity = 500D;
+                this.supply = 5000D;
+                this.capacity = 5000D;
                 this.status = false;
                 break;
             case 6:
                 this.metalRequiredNextLevel = 40D;
                 this.diamondRequiredNextLevel = 80D;
-                this.supply = 500D;
-                this.capacity = 500D;
+                this.supply = 5000D;
+                this.capacity = 5000D;
                 this.status = false;
                 break;
             case 7:

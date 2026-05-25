@@ -27,6 +27,8 @@ public class TaskServiceTwo {
 
     private final SimpMessagingTemplate messagingTemplate;
 
+    private static boolean fullDepositSensor = true;
+
     @Transactional
     public void taskRegisteredForStructure(long structureId){
         Structure structure = structureRepository.findById(structureId).orElseThrow(()-> new RuntimeException("Struttura non trovata"));
@@ -57,13 +59,17 @@ public class TaskServiceTwo {
         if(structure.getTypeStructure() == TypeStructure.MetalMine){
             Structure metalMine = structure;
             if (metalDeposit.getSupply() >= metalDeposit.getCapacity()) {
-                log.info("Il serbatoio metallico è pieno.");
-                messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
-                        "ATENZIONE: Il serbatoio metallico è pieno. "
-                );
-            
+                if(fullDepositSensor){
+                    log.warn("Il serbatoio metallico è pieno.");
+                    messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                            "ATENZIONE: Il serbatoio metallico è pieno. ");
+                    fullDepositSensor = false;
+                }
                 return;
             }
+
+            if(!fullDepositSensor) fullDepositSensor = true;
+
             if(!metalMine.getStatus()){
                 metalMine.setStatus(true);
             }
@@ -77,12 +83,17 @@ public class TaskServiceTwo {
         }else if(structure.getTypeStructure() == TypeStructure.DiamondMine){
             Structure diamondMine = structure;
             if (diamondDeposit.getSupply() >= diamondDeposit.getCapacity()) {
-            log.info("Il serbatoio di diamante è pieno.");
-            messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
-                    "ATENZIONE: Il serbatoio di diamante è pieno."
-            );
-            return;
+                if(fullDepositSensor){
+                    log.warn("Il serbatoio di diamante è pieno.");
+                    messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                            "ATENZIONE: Il serbatoio di diamante è pieno.");
+                    fullDepositSensor = false;
+                }
+                return;
             }
+
+            if(!fullDepositSensor) fullDepositSensor = true;
+
             if(!diamondMine.getStatus()){
                 diamondMine.setStatus(true);
             }
@@ -96,12 +107,18 @@ public class TaskServiceTwo {
         }else{
             Structure deuteriumSynthesizer = structure;
             if (deuteriumDeposit.getSupply() >= deuteriumDeposit.getCapacity()) {
-            log.info("Il serbatoio di deuterio è pieno.");
-            messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
-                    "ATENZIONE: Il serbatoio di deuterio è pieno."
-            );
-            return;
+                if(fullDepositSensor){
+                    log.warn("Il serbatoio di deuterio è pieno.");
+                    messagingTemplate.convertAndSend("/topic/struttura/produzione", // ---- Si ha aggiunto questo. ----
+                        "ATENZIONE: Il serbatoio di deuterio è pieno.");
+                    fullDepositSensor = false;
+                }
+                
+                return;
             }
+
+            if(!fullDepositSensor) fullDepositSensor = true;
+                        
             if(!deuteriumSynthesizer.getStatus()){
                 deuteriumSynthesizer.setStatus(true);
             }

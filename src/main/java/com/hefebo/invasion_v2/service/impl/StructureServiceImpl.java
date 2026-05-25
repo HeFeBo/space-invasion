@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.hefebo.invasion_v2.model.structures.Structure;
 import com.hefebo.invasion_v2.repository.StructureRepository;
+import com.hefebo.invasion_v2.service.AuxiliaryService;
 import com.hefebo.invasion_v2.service.StructureService;
 import com.hefebo.invasion_v2.service.TaskServiceOne;
 
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class StructureServiceImpl implements StructureService{
     private final StructureRepository structureRepository;
     private final TaskServiceOne taskServiceOne;
+    private final AuxiliaryService auxiliaryService;
 
     private final TaskScheduler taskScheduler;
     private final SimpMessagingTemplate messagingTemplate;
@@ -36,7 +38,10 @@ public class StructureServiceImpl implements StructureService{
         }
         Instant executedAt = Objects.requireNonNull(Instant.now().plusSeconds(10));
         taskScheduler.schedule(() -> {
+            boolean firstLevel = structureRepository.findById(structureId).orElseThrow().getLevel() == 0 ? true : false;
             Structure structure = taskServiceOne._upgradeStructure(structureId);
+            if(firstLevel && auxiliaryService._isProductionStructure(structureId))
+                taskServiceOne._startStructureProduction(structureId);
             int newLevel = structure.getLevel();
             log.info("Inviando messaggio WebSocket a /topic/struttura/produzione");
             messagingTemplate.convertAndSend("/topic/struttura/produzione", //Si ha aggiunto structure.getTypeStructure()
