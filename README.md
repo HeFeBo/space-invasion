@@ -1,20 +1,20 @@
-# Invasion V2
+# 🚀 Invasion V2
 
-Backend de un juego de estrategia espacial construido con Spring Boot, Spring Data JPA, MySQL y WebSocket.
+Backend di un gioco di strategia spaziale costruito con Spring Boot, Spring Data JPA, MySQL e WebSocket 🌌🛠️
 
-## Estado actual
+## 📌 Stato attuale
 
-El backend ya expone el flujo principal del juego:
+Il backend espone già il flusso principale del gioco:
 
-- creación del `Leader` inicial y de su primer planeta
-- colonización diferida de planetas
-- mejora diferida de estructuras
-- mejora diferida de investigaciones
-- notificaciones en tiempo real por WebSocket
+- 🌍 creazione del `Leader` iniziale e del suo primo pianeta
+- 🛰️ colonizzazione differita dei pianeti
+- 🏗️ miglioramento differito delle strutture
+- 🔬 miglioramento differito delle ricerche
+- ⚡ notifiche in tempo reale tramite WebSocket
 
-La lógica del juego sigue en evolución, pero la base principal de dominio y API ya está integrada.
+La logica del gioco è ancora in evoluzione, ma la base principale di dominio e API è già integrata.
 
-## Tecnologías
+## 🧰 Tecnologie
 
 - Java 21
 - Spring Boot 4.0.6
@@ -25,125 +25,122 @@ La lógica del juego sigue en evolución, pero la base principal de dominio y AP
 - Maven
 - MySQL
 
-## Requisitos
+## 📦 Requisiti
 
 - Java 21
 - Maven
-- MySQL accesible en `localhost:3306`
-- Base de datos `invasion2-db`
+- MySQL accessibile su `localhost:3306`
+- Database `invasion2-db`
 
-## Configuración local
+## 🛠️ Configurazione locale
 
-El proyecto usa el perfil `local` definido en `src/main/resources/application-local.properties`.
+Il progetto utilizza il profilo `local` definito in:
 
-Ese perfil apunta a una instancia MySQL local. Si necesitas otra URL, usuario o contraseña, ajusta ese archivo antes de arrancar la aplicación.
+```
+src/main/resources/application-local.properties
+```
 
-## Arranque
+Questo profilo punta a un'istanza MySQL locale. Se hai bisogno di un'altra URL, utente o password, modifica quel file prima di avviare l'applicazione.
 
-Con el perfil local:
+## ▶️ Avvio
+
+Con il profilo `local`:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-## API HTTP
+## 🌐 API HTTP
 
-### Crear el líder inicial y su primer planeta
+### 🧑‍🚀 Creare il leader iniziale e il suo primo pianeta
 
 `POST /api/invasion2`
 
-Crea un nuevo `Leader`, genera un planeta inicial libre y lo asocia al jugador.
+Crea un nuovo `Leader`, genera un pianeta iniziale libero e lo associa al giocatore.
 
-Ejemplo:
+Esempio:
 
 ```bash
 curl -X POST http://localhost:8080/api/invasion2
 ```
 
-### Colonizar un planeta existente
+### 🪐 Colonizzare un pianeta esistente
 
 `POST /api/invasion2/coordinate/{galaxy}/{solarSystem}/{position}/{leaderId}`
 
-Programa una colonización diferida para las coordenadas indicadas usando un `Leader` existente.
+Programma una colonizzazione differita usando un `Leader` esistente.
 
-Ejemplo:
+Esempio:
 
 ```bash
 curl -X POST \
   "http://localhost:8080/api/invasion2/coordinate/1/2/3/1"
 ```
 
-### Mejorar una estructura
+### 🏗️ Migliorare una struttura
 
 `POST /api/invasion2/struttura/upgrade/{structureId}`
 
-Programa la mejora diferida de una estructura.
-
-Ejemplo:
+Esempio:
 
 ```bash
 curl -X POST \
   "http://localhost:8080/api/invasion2/struttura/upgrade/15"
 ```
 
-### Mejorar una investigación
+### 🔬 Migliorare una ricerca
 
 `POST /api/invasion2/research/upgrade/{researchId}/{planetId}`
 
-Programa la mejora diferida de una investigación asociada a un planeta.
-
-Ejemplo:
+Esempio:
 
 ```bash
 curl -X POST \
   "http://localhost:8080/api/invasion2/research/upgrade/4/2"
 ```
 
-## WebSocket
+## 📡 WebSocket
 
-### Endpoint STOMP
-
+**Endpoint STOMP**
 `/ws-invasion`
 
-### Broker
+**Broker**
 
-- prefijo de aplicación: `/app`
-- broker simple: `/topic`
+- prefisso applicazione: `/app`
+- broker semplice: `/topic`
 
-### Topics emitidos
-
-- `/topic/colonization`
-- `/topic/struttura/produzione`
-- `/topic/planet/research`
-
-Estos topics notifican el resultado de colonizaciones, mejoras de estructuras y mejoras de investigaciones.
-
-### Ejemplo de cliente
-
-Con SockJS/STOMP, conecta al endpoint `/ws-invasion` y suscríbete a alguno de los topics anteriores. Por ejemplo:
+**Topics emessi**
 
 - `/topic/colonization`
 - `/topic/struttura/produzione`
 - `/topic/planet/research`
 
-## Notas de implementación
+### 🧪 Esempio di client
 
-- Las operaciones de colonización y mejora se ejecutan con retraso programado de 10 segundos.
-- La producción de estructuras se gestiona con tareas periódicas en segundo plano.
-- El modelo de dominio incluye `Leader`, `Planet`, `Structure`, `Research` y las entidades auxiliares relacionadas con recursos y tipos.
-- JPA está configurado para actualizar el esquema automáticamente en desarrollo.
+Con SockJS/STOMP, connettiti a `/ws-invasion` e iscriviti a uno dei topics:
 
-## Build y tests
+- `/topic/colonization`
+- `/topic/struttura/produzione`
+- `/topic/planet/research`
+
+## 📝 Note di implementazione
+
+- ⏱️ operazioni di colonizzazione e miglioramento con ritardo programmato di 10 secondi
+- 🔄 produzione delle strutture gestita con task periodici
+- 🧩 modello di dominio con `Leader`, `Planet`, `Structure`, `Research` e relative entità ausiliarie
+- 🛠️ JPA configurato per aggiornare automaticamente lo schema in sviluppo
+
+## 🧪 Build e test
 
 ```bash
 ./mvnw test
 ```
 
-## Estructura general
+## 📁 Struttura generale
 
-- `controller/` expone la API HTTP.
-- `service/` contiene la lógica de negocio y las tareas programadas.
-- `configuration/` define el scheduler y el broker WebSocket.
-- `model/` contiene las entidades de dominio.
-- `repository/` encapsula el acceso a datos.
-- `dto/` expone los contratos de respuesta de la API.
+- `controller/` — espone la API HTTP
+- `service/` — logica di business e task programmati
+- `configuration/` — scheduler e broker WebSocket
+- `model/` — entità di dominio
+- `repository/` — accesso ai dati
+- `dto/` — contratti di risposta della API
